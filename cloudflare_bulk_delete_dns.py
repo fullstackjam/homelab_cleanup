@@ -64,4 +64,22 @@ def delete_dns_entries(CLOUDFLARE_GLOBAL_API_KEY, CLOUDFLARE_EMAIL, CLOUDFLARE_Z
         filtered_records = []
         for record in dns_records:
             for keyword in keywords:
-                if keyword in record
+                if keyword in record:
+                    filtered_records.append(record)
+                    break
+
+        # Delete filtered DNS records
+        for record in filtered_records:
+            record_id = record['id']
+            delete_url = f'https://api.cloudflare.com/client/v4/zones/{CLOUDFLARE_ZONE_ID}/dns_records/{record_id}'
+            delete_response = requests.delete(delete_url, headers=headers)
+
+            if delete_response.status_code == 200:
+                print(f'Deleted DNS record: {record["name"]}')
+            else:
+                print(f'Failed to delete DNS record: {record["name"]}')
+    else:
+        print('Failed to fetch DNS records.')
+
+# Call the function to delete DNS entries
+delete_dns_entries(CLOUDFLARE_GLOBAL_API_KEY, CLOUDFLARE_EMAIL, CLOUDFLARE_ZONE_ID, keywords)
