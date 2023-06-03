@@ -1,25 +1,5 @@
 #!/bin/bash
 
-# Function to run pip install command
-run_pip_install() {
-    echo "Running pip install..."
-    
-    # Check the Linux distribution
-    if command -v apt &> /dev/null; then
-        # Ubuntu, Debian, Linux Mint
-        sudo apt install python3-pip
-    elif command -v dnf &> /dev/null; then
-        # CentOS 8 (and newer), Fedora, Red Hat
-        sudo dnf install python3
-    elif command -v pacman &> /dev/null; then
-        # Arch Linux and Manjaro
-        sudo pacman -S python-pip
-    else
-        echo "Unsupported Linux distribution. Please install pip manually."
-        exit 1
-    fi
-}
-
 # Find the Python interpreter
 python_executable=$(which python3)
 
@@ -27,6 +7,12 @@ if [ -z "$python_executable" ]; then
     echo "Python 3 is not installed. Exiting..."
     exit 1
 fi
+
+# Function to run pip install command
+run_pip_install() {
+    echo "Running pip install..."
+    $python_executable -m pip install -r requirements.txt
+}
 
 # Function to run cloudflare_bulk_delete_dns.py
 run_cloudflare_bulk_delete_dns() {
