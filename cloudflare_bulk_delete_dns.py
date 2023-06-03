@@ -31,7 +31,7 @@ if CLOUDFLARE_ZONE_ID is None or CLOUDFLARE_ZONE_ID.strip() == "":
 KEYWORDS = os.environ.get("KEYWORDS")
 if KEYWORDS is None or KEYWORDS.strip() == "":
     KEYWORDS = input("Enter keywords (comma-separated): ")
-    keywords = [keyword.strip() for keyword in KEYWORDS.split(",")]
+    keywords = [keyword.strip() for keyword in KEYWORDS.split(",") if keyword.strip()]
     os.environ["KEYWORDS"] = ",".join(keywords)
     with open(".env", "a") as env_file:
         env_file.write("KEYWORDS={}\n".format(",".join(keywords)))
@@ -54,19 +54,29 @@ def delete_dns_entries(CLOUDFLARE_GLOBAL_API_KEY, CLOUDFLARE_EMAIL, CLOUDFLARE_Z
     response = requests.get(url, headers=headers, params=params)
 
     if response.status_code == 200:
-        dns_records = response.json()['result']
+        dns_records = response.json().get('result', [])
         record_count = len(dns_records)
         if record_count == 0:
             print('No DNS records found.')
             return
 
+        print(f'Found {record_count} DNS records.')
+
         # Filter DNS records based on keywords
         filtered_records = []
         for record in dns_records:
+            print(f'Record: {record}')
+            record_name = record.get('name', '').lower()
+            record_content = record.get('content', '').lower()
             for keyword in keywords:
-                if keyword in record:
+                print(f'Keyword: {keyword}')
+                if keyword.lower() in record_name or keyword.lower() in record_content:
                     filtered_records.append(record)
                     break
+
+
+
+        print(f'Filtered {len(filtered_records)} DNS records.')
 
         # Delete filtered DNS records
         for record in filtered_records:

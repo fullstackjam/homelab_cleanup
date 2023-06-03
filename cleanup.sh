@@ -46,6 +46,12 @@ run_cloudflare_bulk_delete_dns() {
     $python_executable cloudflare_bulk_delete_dns.py
 }
 
+# Function to run cloudflare_delete_api_tokens.py
+run_cloudflare_delete_api_tokens() {
+    echo "Running Cloudflare Delete API Tokens..."
+    $python_executable cloudflare_delete_api_tokens.py
+}
+
 # Function to run cloudflare_delete_tunnel.py
 run_cloudflare_delete_tunnel() {
     echo "Running Cloudflare Tunnel Deletion..."
@@ -68,6 +74,7 @@ run_zerotier_delete_network() {
 run_all_scripts() {
     run_pip_install
     run_cloudflare_bulk_delete_dns
+    run_cloudflare_delete_api_tokens
     run_cloudflare_delete_tunnel
     run_terraform_workspace_delete_create
     run_zerotier_delete_network
@@ -79,11 +86,12 @@ while true; do
     echo "<><><><><><><><><><><><><><><><><><><><><><><><>"
     echo "Select an option:"
     echo "1. Run Cloudflare Bulk Deletion"
-    echo "2. Run Cloudflare Tunnel Deletion"
-    echo "3. Run Terraform Workspace Deletion and Creation"
-    echo "4. Run Zerotier Network Deletion"
-    echo "5. Run all the things"
+    echo "2. Run Cloudflare Delete API Tokens"
+    echo "3. Run Cloudflare Tunnel Deletion"
+    echo "4. Run Terraform Workspace Deletion and Creation"
+    echo "5. Run Zerotier Network Deletion"
     echo "6. Install Python dependencies"
+    echo "7. Do all the things"
     echo "0. Exit"
     echo "<><><><><><><><><><><><><><><><><><><><><><><><>"
     echo " "
@@ -92,11 +100,12 @@ while true; do
     case $choice in
         0) exit;;
         1) run_cloudflare_bulk_delete_dns;;
-        2) run_cloudflare_delete_tunnel;;
-        3) run_terraform_workspace_delete_create;;
-        4) run_zerotier_delete_network;;
-        5) run_all_scripts;;
+        2) run_cloudflare_delete_api_tokens;;
+        3) run_cloudflare_delete_tunnel;;
+        4) run_terraform_workspace_delete_create;;
+        5) run_zerotier_delete_network;;
         6) run_pip_install;;
+        7) run_all_scripts;;
         *) echo "Invalid choice";;
     esac
 
