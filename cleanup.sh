@@ -7,13 +7,13 @@ run_pip_install() {
     # Check the Linux distribution
     if command -v apt &> /dev/null; then
         # Ubuntu, Debian, Linux Mint
-        sudo apt install python3-pip
+        apt install python3-pip
     elif command -v dnf &> /dev/null; then
         # CentOS 8 (and newer), Fedora, Red Hat
-        sudo dnf install python3
+        dnf install python3
     elif command -v pacman &> /dev/null; then
         # Arch Linux and Manjaro
-        sudo pacman -S python-pip
+        pacman -S python-pip
     else
         echo "Unsupported Linux distribution. Please install pip manually."
         exit 1
