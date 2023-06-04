@@ -135,7 +135,7 @@ def validate_variables():
         choice = input("Do you want to manage the variables? (yes/no): ")
         
         if choice.lower() == "yes":
-            manage_variables()
+            run_manage_variables()
             validate_variables()
         else:
             print("")
