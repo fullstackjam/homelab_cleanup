@@ -1,5 +1,4 @@
 import requests
-import json
 import os
 import sys
 from dotenv import load_dotenv
@@ -7,76 +6,85 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-# Get the Cloudflare Global API Key
-CLOUDFLARE_GLOBAL_API_KEY = os.environ.get("CLOUDFLARE_GLOBAL_API_KEY")
-if CLOUDFLARE_GLOBAL_API_KEY is None or CLOUDFLARE_GLOBAL_API_KEY.strip() == "":
-    CLOUDFLARE_GLOBAL_API_KEY = input("Enter Cloudflare Global API Key: ")
-    os.environ["CLOUDFLARE_GLOBAL_API_KEY"] = CLOUDFLARE_GLOBAL_API_KEY
-    with open(".env", "a") as env_file:
-        env_file.write("CLOUDFLARE_GLOBAL_API_KEY={}\n".format(CLOUDFLARE_GLOBAL_API_KEY))
-
+# Retrieve the environment variables
 CLOUDFLARE_ACCOUNT_ID = os.environ.get("CLOUDFLARE_ACCOUNT_ID")
-if CLOUDFLARE_ACCOUNT_ID is None or CLOUDFLARE_ACCOUNT_ID.strip() == "":
-    CLOUDFLARE_ACCOUNT_ID = input("Enter Cloudflare Account ID: ")
-    os.environ["CLOUDFLARE_ACCOUNT_ID"] = CLOUDFLARE_ACCOUNT_ID
-    with open(".env", "a") as env_file:
-        env_file.write("CLOUDFLARE_ACCOUNT_ID={}\n".format(CLOUDFLARE_ACCOUNT_ID))
-
 CLOUDFLARE_EMAIL = os.environ.get("CLOUDFLARE_EMAIL")
-if CLOUDFLARE_EMAIL is None or CLOUDFLARE_EMAIL.strip() == "":
-    CLOUDFLARE_EMAIL = input("Enter Cloudflare Email: ")
-    os.environ["CLOUDFLARE_EMAIL"] = CLOUDFLARE_EMAIL
-    with open(".env", "a") as env_file:
-        env_file.write("CLOUDFLARE_EMAIL={}\n".format(CLOUDFLARE_EMAIL))
+CLOUDFLARE_GLOBAL_API_KEY = os.environ.get("CLOUDFLARE_GLOBAL_API_KEY")
 
+def get_tunnels():
+    url = "https://api.cloudflare.com/client/v4/accounts/{}/cfd_tunnel".format(CLOUDFLARE_ACCOUNT_ID)
+    headers = {
+        "X-Auth-Email": CLOUDFLARE_EMAIL,
+        "X-Auth-Key": CLOUDFLARE_GLOBAL_API_KEY,
+    }
+    response = requests.get(url, headers=headers)
 
-# Make the GET request
-url = "https://api.cloudflare.com/client/v4/accounts/{}/cfd_tunnel".format(CLOUDFLARE_ACCOUNT_ID)
-headers = {
-    "X-Auth-Email": CLOUDFLARE_EMAIL,
-    "X-Auth-Key": CLOUDFLARE_GLOBAL_API_KEY,
-}
-response = requests.get(url, headers=headers)
-
-# Check the status code
-if response.status_code == 200:
-    # The request was successful
-    data = response.json()
-    tunnels = data["result"]
-    non_deleted_tunnels = [tunnel for tunnel in tunnels if tunnel.get("deleted_at") is None]
-    if not non_deleted_tunnels:
-        print("No Tunnels")
+    if response.status_code == 200:
+        data = response.json()
+        tunnels = data["result"]
+        non_deleted_tunnels = [tunnel for tunnel in tunnels if tunnel.get("deleted_at") is None]
+        return non_deleted_tunnels
+    else:
+        print("Error: {}".format(response.status_code))
         sys.exit()
+
+def delete_tunnel(tunnel):
+    print("")
+    print("<><><><><><><><><><><><><><><><><><><><><>")
+    tunnel_id = tunnel["id"]
+    tunnel_name = tunnel["name"]
+    print("Selected tunnel: {} - Tunnel ID: {}".format(tunnel_name, tunnel_id))
+
+    confirmation = input("Are you sure you want to delete this tunnel? (y/n): ")
+    print("")
+    if confirmation.lower() == "y":
+        delete_url = "https://api.cloudflare.com/client/v4/accounts/{}/cfd_tunnel/{}".format(CLOUDFLARE_ACCOUNT_ID, tunnel_id)
+        headers = {
+            "X-Auth-Email": CLOUDFLARE_EMAIL,
+            "X-Auth-Key": CLOUDFLARE_GLOBAL_API_KEY,
+        }
+        response = requests.delete(delete_url, headers=headers)
+
+        if response.status_code == 200:
+            print("Tunnel deleted successfully")
+            print("<><><><><><><><><><><><><><><><><><><><><>")
+            print("")
+        else:
+            print("Error deleting tunnel: {}".format(response.status_code))
+            print("<><><><><><><><><><><><><><><><><><><><><>")
+            print("")
+    else:
+        print("Deletion canceled")
+        print("<><><><><><><><><><><><><><><><><><><><><>")
+        print("")
+
+def display_tunnels(tunnels):
+    print("")
+    print("<><><><><><><><><><><><><><><><><><><><><>")
+    if not tunnels:
+        print("            No Tunnels Found")
+        print("<><><><><><><><><><><><><><><><><><><><><>")
+        print("")
+        sys.exit()
+
     print("Tunnels:")
-    for i, tunnel in enumerate(non_deleted_tunnels):
+    for i, tunnel in enumerate(tunnels):
         print("{}. Name: {} - Tunnel ID: {}".format(i + 1, tunnel["name"], tunnel["id"]))
-else:
-    # The request failed
-    print("Error: {}".format(response.status_code))
-    sys.exit()
+    print("<><><><><><><><><><><><><><><><><><><><><>")
+    print("")
+
+# Get and display tunnels
+tunnels = get_tunnels()
+display_tunnels(tunnels)
 
 # Delete the selected tunnel
 selected_tunnel_index = input("Enter the tunnel number to delete: ")
 try:
     selected_tunnel_index = int(selected_tunnel_index)
     print(" ")
-    if 1 <= selected_tunnel_index <= len(non_deleted_tunnels):
-        selected_tunnel = non_deleted_tunnels[selected_tunnel_index - 1]
-        tunnel_id = selected_tunnel["id"]
-        tunnel_name = selected_tunnel["name"]
-        print("Selected tunnel: {} - Tunnel ID: {}".format(tunnel_name, tunnel_id))
-
-        confirmation = input("Are you sure you want to delete this tunnel? (y/n): ")
-        if confirmation.lower() == "y":
-            delete_url = "https://api.cloudflare.com/client/v4/accounts/{}/cfd_tunnel/{}".format(CLOUDFLARE_ACCOUNT_ID, tunnel_id)
-            response = requests.delete(delete_url, headers=headers)
-
-            if response.status_code == 200:
-                print("Tunnel deleted successfully")
-            else:
-                print("Error deleting tunnel: {}".format(response.status_code))
-        else:
-            print("Deletion canceled")
+    if 1 <= selected_tunnel_index <= len(tunnels):
+        selected_tunnel = tunnels[selected_tunnel_index - 1]
+        delete_tunnel(selected_tunnel)
     else:
         print("Invalid tunnel number")
 except ValueError:

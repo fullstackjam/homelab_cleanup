@@ -1,44 +1,18 @@
-import requests
 import os
+import requests
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()
 
-# Get the Cloudflare Global API Key and zone ID from environment variables
-CLOUDFLARE_GLOBAL_API_KEY = os.environ.get("CLOUDFLARE_GLOBAL_API_KEY")
-if CLOUDFLARE_GLOBAL_API_KEY is None or CLOUDFLARE_GLOBAL_API_KEY.strip() == "":
-    CLOUDFLARE_GLOBAL_API_KEY = input("Enter Cloudflare Global API Key: ")
-    os.environ["CLOUDFLARE_GLOBAL_API_KEY"] = CLOUDFLARE_GLOBAL_API_KEY
-    with open(".env", "a") as env_file:
-        env_file.write("CLOUDFLARE_GLOBAL_API_KEY={}\n".format(CLOUDFLARE_GLOBAL_API_KEY))
+def delete_dns_entries():
+    print("")
+    print("<><><><><><><><><><><><><><><><><><><>")
+    CLOUDFLARE_GLOBAL_API_KEY = os.environ.get('CLOUDFLARE_GLOBAL_API_KEY')
+    CLOUDFLARE_EMAIL = os.environ.get('CLOUDFLARE_EMAIL')
+    CLOUDFLARE_ZONE_ID = os.environ.get('CLOUDFLARE_ZONE_ID')
+    keywords = os.environ.get('KEYWORDS', '').split(',')
 
-CLOUDFLARE_EMAIL = os.environ.get("CLOUDFLARE_EMAIL")
-if CLOUDFLARE_EMAIL is None or CLOUDFLARE_EMAIL.strip() == "":
-    CLOUDFLARE_EMAIL = input("Enter Cloudflare Email: ")
-    os.environ["CLOUDFLARE_EMAIL"] = CLOUDFLARE_EMAIL
-    with open(".env", "a") as env_file:
-        env_file.write("CLOUDFLARE_EMAIL={}\n".format(CLOUDFLARE_EMAIL))
-
-CLOUDFLARE_ZONE_ID = os.environ.get("CLOUDFLARE_ZONE_ID")
-if CLOUDFLARE_ZONE_ID is None or CLOUDFLARE_ZONE_ID.strip() == "":
-    CLOUDFLARE_ZONE_ID = input("Enter Cloudflare Zone ID: ")
-    os.environ["CLOUDFLARE_ZONE_ID"] = CLOUDFLARE_ZONE_ID
-    with open(".env", "a") as env_file:
-        env_file.write("CLOUDFLARE_ZONE_ID={}\n".format(CLOUDFLARE_ZONE_ID))
-
-# Specify the keywords to match in the content attribute
-KEYWORDS = os.environ.get("KEYWORDS")
-if KEYWORDS is None or KEYWORDS.strip() == "":
-    KEYWORDS = input("Enter keywords (comma-separated): ")
-    keywords = [keyword.strip() for keyword in KEYWORDS.split(",") if keyword.strip()]
-    os.environ["KEYWORDS"] = ",".join(keywords)
-    with open(".env", "a") as env_file:
-        env_file.write("KEYWORDS={}\n".format(",".join(keywords)))
-else:
-    keywords = KEYWORDS.split(",")
-
-def delete_dns_entries(CLOUDFLARE_GLOBAL_API_KEY, CLOUDFLARE_EMAIL, CLOUDFLARE_ZONE_ID, keywords):
     headers = {
         'X-Auth-Key': CLOUDFLARE_GLOBAL_API_KEY,
         'X-Auth-Email': CLOUDFLARE_EMAIL,
@@ -65,31 +39,37 @@ def delete_dns_entries(CLOUDFLARE_GLOBAL_API_KEY, CLOUDFLARE_EMAIL, CLOUDFLARE_Z
         # Filter DNS records based on keywords
         filtered_records = []
         for record in dns_records:
-            print(f'Record: {record}')
             record_name = record.get('name', '').lower()
             record_content = record.get('content', '').lower()
             for keyword in keywords:
-                print(f'Keyword: {keyword}')
                 if keyword.lower() in record_name or keyword.lower() in record_content:
                     filtered_records.append(record)
                     break
 
-
-
         print(f'Filtered {len(filtered_records)} DNS records.')
 
         # Delete filtered DNS records
+        deleted_records = []
         for record in filtered_records:
             record_id = record['id']
             delete_url = f'https://api.cloudflare.com/client/v4/zones/{CLOUDFLARE_ZONE_ID}/dns_records/{record_id}'
             delete_response = requests.delete(delete_url, headers=headers)
 
             if delete_response.status_code == 200:
-                print(f'Deleted DNS record: {record["name"]}')
-            else:
-                print(f'Failed to delete DNS record: {record["name"]}')
+                deleted_records.append(record['name'])
+
+        deleted_count = len(deleted_records)
+        if deleted_count > 0:
+            print(f'Deleted {deleted_count} DNS records:')
+            for name in deleted_records:
+                print(name)
+        else:
+            print('No DNS records matched the keywords.')
     else:
         print('Failed to fetch DNS records.')
+    print("<><><><><><><><><><><><><><><><><><><>")
+    print("")
+
 
 # Call the function to delete DNS entries
-delete_dns_entries(CLOUDFLARE_GLOBAL_API_KEY, CLOUDFLARE_EMAIL, CLOUDFLARE_ZONE_ID, keywords)
+delete_dns_entries()
