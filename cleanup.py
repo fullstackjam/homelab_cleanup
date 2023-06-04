@@ -72,6 +72,11 @@ def run_zerotier_delete_network():
     print("Running Zerotier Network Deletion...")
     os.system(f'{python_executable} zerotier_delete_network.py')
 
+# Function to run manage_keywords.py
+def run_manage_keywords():
+    print("Managing Keywords...")
+    os.system(f'{python_executable} manage_keywords.py')
+
 # Function to run manage_variables.py
 def run_manage_variables():
     print("Managing Environment Variables...")
@@ -163,9 +168,10 @@ while True:
     print("4. Run Terraform Workspace Deletion and Creation")
     print("5. Run Zerotier Network Deletion")
     print("6. Install Python dependencies")
-    print("7. Manage Environment Variables")
-    print("8. Validate Environment Variables")
-    print("9. Do all the things")
+    print("7. Manage Keywords")
+    print("8. Manage Environment Variables")
+    print("9. Validate Environment Variables")
+    print("10. Do all the things")
     print("0. Exit")
     print("<><><><><><><><><><><><><><><><><><><><><><><><>")
     print(" ")
@@ -186,10 +192,12 @@ while True:
     elif choice == "6":
         run_pip_install()
     elif choice == "7":
-        run_manage_variables()
+        run_manage_keywords()
     elif choice == "8":
-        validate_variables()
+        run_manage_variables()
     elif choice == "9":
+        validate_variables()
+    elif choice == "10":
         run_all_scripts()
     else:
         print("Invalid choice")
