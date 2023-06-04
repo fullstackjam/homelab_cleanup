@@ -59,9 +59,9 @@ if has_values:
             value = os.environ.get(variable)
             if value is None or value.strip() == "" or value.strip() == "<<NULL>>":
                 value = "<<NULL>>"
-                print(f"\033[91m{variable}: <<NULL>>\033[0m")
+                print(f"\033[91m- {variable}: <<NULL>>\033[0m")
             else:
-                print(f"{variable}: {value}")
+                print(f"- {variable}: {value}")
         print("<><><><><><><><><><><><><><><><><><><><>")
         print(" ")
 
@@ -97,8 +97,8 @@ for variable, _ in variables.items():
     value = os.environ.get(variable)
     if value is None or value.strip() == "" or value.strip == "<<NULL>>":
         value = "<<NULL>>"
-        print(f"{variable}: \033[91m<<NULL>>\033[0m")
+        print(f"\033[91m- {variable}: <<NULL>>\033[0m")
     else:
-        print(f"{variable}: {value}")
+        print(f"- {variable}: {value}")
 print("<><><><><><><><><><><><><><><><><><><><>")
 print("")
