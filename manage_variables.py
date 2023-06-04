@@ -11,7 +11,7 @@ def prompt_user(variable, prompt):
         value = input(prompt)
     else:
         print(f"Current value for {variable}: {value}")
-        choice = input(f"Enter a new value for {variable} (or press Enter to keep current value): ")
+        choice = input(f"Enter a new value for {variable} (or press Enter to keep the current value): ")
         if choice.strip() != "":
             value = choice.strip()
 
@@ -57,15 +57,17 @@ if has_values:
         print("Variables and Values:")
         for variable, prompt in variables.items():
             value = os.environ.get(variable)
-            if value is None or value.strip() == "":
+            if value is None or value.strip() == "" or value.strip() == "<<NULL>>":
                 value = "<<NULL>>"
-            print("- {}: {}".format(variable, value))
+                print(f"\033[91m{variable}: <<NULL>>\033[0m")
+            else:
+                print(f"{variable}: {value}")
         print("<><><><><><><><><><><><><><><><><><><><>")
         print(" ")
 
         print("Variables:")
         for i, variable in enumerate(variables.keys(), start=1):
-            print("{}. {}".format(i, variable))
+            print(f"{i}. {variable}")
         print(" ")
 
         choice = input("Enter the number of the variable you want to edit (or press Enter to skip): ")
@@ -93,8 +95,10 @@ print("<><><><><><><><><><><><><><><><><><><><>")
 print("Final values:")
 for variable, _ in variables.items():
     value = os.environ.get(variable)
-    if value is None or value.strip() == "":
+    if value is None or value.strip() == "" or value.strip == "<<NULL>>":
         value = "<<NULL>>"
-    print("{}: {}".format(variable, value))
+        print(f"{variable}: \033[91m<<NULL>>\033[0m")
+    else:
+        print(f"{variable}: {value}")
 print("<><><><><><><><><><><><><><><><><><><><>")
 print("")
