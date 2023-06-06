@@ -11,6 +11,7 @@ def remove_api_tokens():
     CLOUDFLARE_GLOBAL_API_KEY = os.environ.get('CLOUDFLARE_GLOBAL_API_KEY')
     CLOUDFLARE_EMAIL = os.environ.get('CLOUDFLARE_EMAIL')
     keywords = os.environ.get('KEYWORDS', '').split(',')
+    print("Keywords: ",keywords)
 
     headers = {
         'X-Auth-Key': CLOUDFLARE_GLOBAL_API_KEY,
