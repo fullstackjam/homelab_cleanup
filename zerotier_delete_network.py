@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from requests.exceptions import RequestException
 
 # Load environment variables from .env file
-load_dotenv()
+load_dotenv(override=True)
 
 # Retrieve the environment variables
 ZEROTIER_API_TOKEN = os.environ.get("ZEROTIER_API_TOKEN")
