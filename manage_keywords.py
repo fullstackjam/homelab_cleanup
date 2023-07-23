@@ -4,6 +4,17 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv(override=True)
 
+# Function to update the .env file with the new variable value
+def update_env_file(variable, value):
+    with open(".env", "r") as env_file:
+        lines = env_file.readlines()
+    with open(".env", "w") as env_file:
+        for line in lines:
+            if not line.startswith(f"{variable}="):
+                env_file.write(line)
+        if value.strip() != "":
+            env_file.write("{}={}\n".format(variable, value))
+
 def display_keywords(keywords):
     print(" ")
     print("***********************")
@@ -23,6 +34,10 @@ def add_keywords(keywords):
         new_keywords_list = [keyword.strip() for keyword in new_keywords.split(",")]
         keywords.extend(new_keywords_list)
         print("Keywords added successfully.")
+    
+    # Update the .env file with the new KEYWORDS value after adding keywords
+    updated_keywords = ",".join(keywords)
+    update_env_file("KEYWORDS", updated_keywords)
 
 def remove_keywords(keywords):
     while True:
@@ -39,6 +54,10 @@ def remove_keywords(keywords):
                 print("Invalid keyword number. Please try again.")
         except ValueError:
             print("Invalid input. Please enter a valid keyword number or Enter to skip.")
+    
+    # Update the .env file with the new KEYWORDS value after removing keywords
+    updated_keywords = ",".join(keywords)
+    update_env_file("KEYWORDS", updated_keywords)
 
 def manage_keywords(keywords):
     while True:
