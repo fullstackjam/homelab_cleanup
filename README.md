@@ -9,7 +9,7 @@ Run the following command from within the repo folder and inside make tools nix 
 
 ```python cleanup.py```
 
-You will have plenty of oppoortunity to opt out of a change before committing to it. Make sure to fill in all your Environment Variables as the cleanup.py is built to prevent you from leaving anything out.
+You will have plenty of opportunity to opt out of a change before committing to it. Make sure to fill in all your Environment Variables as the cleanup.py is built to prevent you from leaving anything out.
 
 You can double check your Environment Variables in the .env file to make sure they are correct.
 

@@ -4,107 +4,54 @@ import os
 import subprocess
 from dotenv import load_dotenv
 
+def execute_shell_command(command):
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, check=True)
+        print(f"Command Output:\n{result.stdout.strip()}")
+        return result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+        print(f"Error executing command '{' '.join(command)}': {e}\nOutput:\n{e.output}")
+        return None
 
-# Find the Python interpreter
-python_executable = subprocess.run(['which', 'python3'], capture_output=True, text=True).stdout.strip()
+
+python_executable = execute_shell_command(['which', 'python3'])
+python_execute = "python3"
 
 if not python_executable:
     print("Python 3 is not installed. Exiting...")
     exit(1)
 
-
-# Function to run pip install command
 def run_pip_install():
-    print(" ")
-    print("Running PIP install...")
-    print(" ")
-    
-    # Check the Linux distribution
-    if os.system('command -v apt &> /dev/null') == 0:
-        # Ubuntu, Debian, Linux Mint
-        os.system('apt update -y')
-        os.system('apt install python3-pip')
-    elif os.system('command -v dnf &> /dev/null') == 0:
-        # CentOS 8 (and newer), Fedora, Red Hat
-        os.system('dnf install python3')
-    elif os.system('command -v pacman &> /dev/null') == 0:
-        # Arch Linux and Manjaro
-        os.system('pacman -S python-pip')
+    print("\nRunning PIP install...\n")
+
+    distro_commands = {
+        'apt': ['apt-get', 'update', '-y', '&&', 'apt-get', 'install', 'python3-pip', '-y'],
+        'dnf': ['dnf', 'install', 'python3', '-y'],
+        'pacman': ['pacman', '-S', 'python-pip', '--noconfirm']
+    }
+
+    for cmd, install_cmd in distro_commands.items():
+        if execute_shell_command(['command', '-v', cmd]):
+            execute_shell_command(install_cmd.split())
+            break
     else:
         print("Unsupported Linux distribution. Please install pip manually.")
-        exit(1)
+        return
 
-    print(" ")
-    print("Installing Dependencies via PIP Requirements file...")
-    print(" ")
+    execute_shell_command([python_execute, '-m', 'pip', 'install', '-r', 'requirements.txt'])
 
-    os.system(f'{python_executable} -m pip install -r requirements.txt')
+def run_python_script(script_name):
+    print(f"Running {script_name}...")
+    output = execute_shell_command([python_execute, script_name])
+    if output:
+        print(output)
 
-    print(" ")
-
-
-# Function to run cloudflare_bulk_delete_dns.py
-def run_cloudflare_bulk_delete_dns():
-    print("Running Cloudflare Bulk DNS Cleanup...")
-    os.system(f'{python_executable} cloudflare_bulk_delete_dns.py')
-
-
-# Function to run cloudflare_delete_api_tokens.py
-def run_cloudflare_delete_api_tokens():
-    print("Running Cloudflare Delete API Tokens...")
-    os.system(f'{python_executable} cloudflare_delete_api_tokens.py')
-
-
-# Function to run cloudflare_delete_tunnel.py
-def run_cloudflare_delete_tunnel():
-    print("Running Cloudflare Tunnel Deletion...")
-    os.system(f'{python_executable} cloudflare_delete_tunnel.py')
-
-
-# Function to run terraform_workspace_delete_create.py
-def run_terraform_workspace_delete_create():
-    print("Running Terraform Workspace Deletion and Creation...")
-    os.system(f'{python_executable} terraform_workspace_delete_create.py')
-
-
-# Function to run zerotier_delete_network.py
-def run_zerotier_delete_network():
-    print("Running Zerotier Network Deletion...")
-    os.system(f'{python_executable} zerotier_delete_network.py')
-
-# Function to run manage_keywords.py
-def run_manage_keywords():
-    print("Managing Keywords...")
-    os.system(f'{python_executable} manage_keywords.py')
-
-# Function to run manage_variables.py
-def run_manage_variables():
-    print("Managing Environment Variables...")
-    os.system(f'{python_executable} manage_variables.py')
-
-# Function to run all scripts in the specified order
-def run_all_scripts():
-    run_pip_install()
-    run_cloudflare_bulk_delete_dns()
-    run_cloudflare_delete_api_tokens()
-    run_cloudflare_delete_tunnel()
-    run_terraform_workspace_delete_create()
-    run_zerotier_delete_network()
-
-
-# Function to validate environment variables
 def validate_variables():
-    print(" ")
-    print("***********************************")
-    print("Validating Environment Variables...")
-    print("***********************************")
+    print("\nValidating Environment Variables...\n")
     
     missing_variables = []
-    
-    # Load variables from .env file
     load_dotenv(override=True)
     
-    # Check if variables have valid values
     variables = [
         'CLOUDFLARE_GLOBAL_API_KEY',
         'CLOUDFLARE_EMAIL',
@@ -123,83 +70,55 @@ def validate_variables():
         if not os.getenv(var) or os.getenv(var) == "<<NULL>>":
             missing_variables.append(var)
     
-    # Prompt to manage variables if any are missing or have invalid values
     if missing_variables:
-        print("")
-        print("<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>")
         print("Some environment variables are missing or have invalid values:")
         for var in missing_variables:
             print(f"- {var}")
-        print("<><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><><>")
-        print("")
         choice = input("Do you want to manage the variables? (yes/no): ")
         
         if choice.lower() == "yes":
-            run_manage_variables()
+            run_python_script('manage_variables.py')
             validate_variables()
         else:
-            print("")
-            print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
-            print("All Environment Variables must have a valid value to properly execute the Cleanup Process.")
-            print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
-            print("")
-            print("Starting Over...")
+            print("All Environment Variables must have a valid value to execute the Cleanup Process.")
+            exit(1)
+    else:
+        print("All environment variables are valid.")
+
+try:
+    validate_variables()
+    while True:    
+        print("\nSelect an option:\n1. Run Cloudflare Bulk Deletion\n2. Run Cloudflare Delete API Tokens\n3. Run Cloudflare Tunnel Deletion\n4. Run Terraform Workspace Deletion and Creation\n5. Run Zerotier Network Deletion\n6. Install Python dependencies\n7. Manage Keywords\n8. Manage Environment Variables\n9. Validate Environment Variables\n10. Run All Scripts\n0. Exit\n")
+        choice = input("Enter your choice: ")
+        
+        if choice == "0":
+            break
+        elif choice == "1":
+            run_python_script('cloudflare_bulk_delete_dns.py')
+        elif choice == "2":
+            run_python_script('cloudflare_delete_api_tokens.py')
+        elif choice == "3":
+            run_python_script('cloudflare_delete_tunnel.py')
+        elif choice == "4":
+            run_python_script('terraform_workspace_delete_create.py')
+        elif choice == "5":
+            run_python_script('zerotier_delete_network.py')
+        elif choice == "6":
+            run_pip_install()
+        elif choice == "7":
+            run_python_script('manage_keywords.py')
+        elif choice == "8":
+            run_python_script('manage_variables.py')
+        elif choice == "9":
             validate_variables()
-    else:
-        print("")
-        print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
-        print("All environment variables are present and have valid values.")
-        print("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
-        print("")
-
-
-
-# Validate environment variables before displaying the main menu
-validate_variables()
-
-# Main menu
-while True:    
-    print(" ")
-    print("<><><><><><><><><><><><><><><><><><><><><><><><>")
-    print("Select an option:")
-    print("1. Run Cloudflare Bulk Deletion")
-    print("2. Run Cloudflare Delete API Tokens")
-    print("3. Run Cloudflare Tunnel Deletion")
-    print("4. Run Terraform Workspace Deletion and Creation")
-    print("5. Run Zerotier Network Deletion")
-    print("6. Install Python dependencies")
-    print("7. Manage Keywords")
-    print("8. Manage Environment Variables")
-    print("9. Validate Environment Variables")
-    print("10. Do all the things")
-    print("0. Exit")
-    print("<><><><><><><><><><><><><><><><><><><><><><><><>")
-    print(" ")
-    choice = input("Enter your choice: ")
-    
-    if choice == "0":
-        exit()
-    elif choice == "1":
-        run_cloudflare_bulk_delete_dns()
-    elif choice == "2":
-        run_cloudflare_delete_api_tokens()
-    elif choice == "3":
-        run_cloudflare_delete_tunnel()
-    elif choice == "4":
-        run_terraform_workspace_delete_create()
-    elif choice == "5":
-        run_zerotier_delete_network()
-    elif choice == "6":
-        run_pip_install()
-    elif choice == "7":
-        run_manage_keywords()
-    elif choice == "8":
-        run_manage_variables()
-    elif choice == "9":
-        validate_variables()
-    elif choice == "10":
-        run_all_scripts()
-    else:
-        print("Invalid choice")
-    
-    print()
+        elif choice == "10":
+            run_pip_install()
+            run_python_script('cloudflare_bulk_delete_dns.py')
+            run_python_script('cloudflare_delete_api_tokens.py')
+            run_python_script('cloudflare_delete_tunnel.py')
+            run_python_script('terraform_workspace_delete_create.py')
+            run_python_script('zerotier_delete_network.py')
+        else:
+            print("Invalid choice")
+except KeyboardInterrupt:
+    print("\nExiting...")
