@@ -15,7 +15,7 @@ def execute_shell_command(command):
 
 
 python_executable = execute_shell_command(['which', 'python3'])
-python_execute = "python3"
+python_execute = "/usr/bin/python3"
 
 if not python_executable:
     print("Python 3 is not installed. Exiting...")
