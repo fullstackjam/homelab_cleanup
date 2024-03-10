@@ -7,7 +7,11 @@
 ## Grafana
 `kubectl get secret dex.grafana -n global-secrets -o jsonpath='{.data.client_secret}' | base64 --decode && echo`
 
-
+## KanIDM
+User - admin
+`./scripts/kanidm-reset-password admin`
+User - idm_admin
+`./scripts/kanidm-reset-password idm_admin`
 
 ## Stop Auto-Heal and Set Manual-Sync
 `argocd login argocd.eaglepass.io --grpc-web --no-verify`
