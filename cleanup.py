@@ -1,124 +1,59 @@
-#!/usr/bin/env python3
-
 import os
 import subprocess
-from dotenv import load_dotenv
+import sys
 
-def execute_shell_command(command):
+def run_script(script_name):
+    """Run a script using subprocess."""
     try:
-        result = subprocess.run(command, capture_output=True, text=True, check=True)
-        print(f"Command Output:\n{result.stdout.strip()}")
-        return result.stdout.strip()
+        subprocess.run(['python3', script_name], check=True)
     except subprocess.CalledProcessError as e:
-        print(f"Error executing command '{' '.join(command)}': {e}\nOutput:\n{e.output}")
-        return None
+        print(f"An error occurred while running {script_name}: {e}")
 
+def full_setup():
+    """Run all scripts in the specified order for full reset."""
+    scripts = [
+        'manage_variables.py',
+        'manage_keywords.py',
+        'cloudflare_bulk_delete_dns.py',
+        'cloudflare_delete_api_tokens.py',
+        'cloudflare_delete_tunnel.py',
+        'zerotier_delete_network.py',
+        'terraform_workspace_delete_create.py'
+    ]
+    for script in scripts:
+        print(f"Running {script}...")
+        run_script(script)
+        print(f"Finished {script}.\n")
 
-python_executable = execute_shell_command(['which', 'python3'])
-python_execute = "/usr/bin/python3"
-
-if not python_executable:
-    print("Python 3 is not installed. Exiting...")
-    exit(1)
-
-def run_pip_install():
-    print("\nRunning PIP install...\n")
-
-    distro_commands = {
-        'apt': ['apt-get', 'update', '-y', '&&', 'apt-get', 'install', 'python3-pip', '-y'],
-        'dnf': ['dnf', 'install', 'python3', '-y'],
-        'pacman': ['pacman', '-S', 'python-pip', '--noconfirm']
+def main_menu():
+    """Display the main menu and handle user input."""
+    menu_options = {
+        '1': ('Cloudflare Bulk Record Removal', 'cloudflare_bulk_delete_dns.py'),
+        '2': ('Cloudflare API Removal', 'cloudflare_delete_api_tokens.py'),
+        '3': ('Cloudflare Tunnel Removal', 'cloudflare_delete_tunnel.py'),
+        '4': ('Zerotier Network Removal', 'zerotier_delete_network.py'),
+        '5': ('Terraform Workspace Rebuild', 'terraform_workspace_delete_create.py'),
+        '6': ('Manage Variables', 'manage_variables.py'),
+        '7': ('Manage Keywords', 'manage_keywords.py'),
+        '8': ('Full Reset', full_setup),
+        '9': ('Exit', sys.exit)
     }
 
-    for cmd, install_cmd in distro_commands.items():
-        if execute_shell_command(['command', '-v', cmd]):
-            execute_shell_command(install_cmd.split())
-            break
-    else:
-        print("Unsupported Linux distribution. Please install pip manually.")
-        return
+    while True:
+        print("Main Menu:")
+        for key in sorted(menu_options.keys()):
+            print(f"{key}. {menu_options[key][0]}")
 
-    execute_shell_command([python_execute, '-m', 'pip', 'install', '-r', 'requirements.txt'])
+        choice = input("Enter your choice: ").strip()
 
-def run_python_script(script_name):
-    print(f"Running {script_name}...")
-    output = execute_shell_command([python_execute, script_name])
-    if output:
-        print(output)
-
-def validate_variables():
-    print("\nValidating Environment Variables...\n")
-    
-    missing_variables = []
-    load_dotenv(override=True)
-    
-    variables = [
-        'CLOUDFLARE_GLOBAL_API_KEY',
-        'CLOUDFLARE_EMAIL',
-        'CLOUDFLARE_ACCOUNT_ID',
-        'CLOUDFLARE_ZONE_ID',
-        'ZEROTIER_API_TOKEN',
-        'TERRAFORM_IO_API_TOKEN',
-        'TERRAFORM_OAUTH_TOKEN_ID',
-        'VCS_IDENTIFIER',
-        'REPO_TOKEN',
-        'ORGANIZATION',
-        'KEYWORDS'
-    ]
-    
-    for var in variables:
-        if not os.getenv(var) or os.getenv(var) == "<<NULL>>":
-            missing_variables.append(var)
-    
-    if missing_variables:
-        print("Some environment variables are missing or have invalid values:")
-        for var in missing_variables:
-            print(f"- {var}")
-        choice = input("Do you want to manage the variables? (yes/no): ")
-        
-        if choice.lower() == "yes":
-            run_python_script('manage_variables.py')
-            validate_variables()
+        if choice in menu_options:
+            action = menu_options[choice]
+            if callable(action[1]):
+                action[1]()  # Execute function if it's full setup or exit
+            else:
+                run_script(action[1])  # Execute script file
         else:
-            print("All Environment Variables must have a valid value to execute the Cleanup Process.")
-            exit(1)
-    else:
-        print("All environment variables are valid.")
+            print("Invalid choice. Please try again.")
 
-try:
-    validate_variables()
-    while True:    
-        print("\nSelect an option:\n1. Run Cloudflare Bulk Deletion\n2. Run Cloudflare Delete API Tokens\n3. Run Cloudflare Tunnel Deletion\n4. Run Terraform Workspace Deletion and Creation\n5. Run Zerotier Network Deletion\n6. Install Python dependencies\n7. Manage Keywords\n8. Manage Environment Variables\n9. Validate Environment Variables\n10. Run All Scripts\n0. Exit\n")
-        choice = input("Enter your choice: ")
-        
-        if choice == "0":
-            break
-        elif choice == "1":
-            run_python_script('cloudflare_bulk_delete_dns.py')
-        elif choice == "2":
-            run_python_script('cloudflare_delete_api_tokens.py')
-        elif choice == "3":
-            run_python_script('cloudflare_delete_tunnel.py')
-        elif choice == "4":
-            run_python_script('terraform_workspace_delete_create.py')
-        elif choice == "5":
-            run_python_script('zerotier_delete_network.py')
-        elif choice == "6":
-            run_pip_install()
-        elif choice == "7":
-            run_python_script('manage_keywords.py')
-        elif choice == "8":
-            run_python_script('manage_variables.py')
-        elif choice == "9":
-            validate_variables()
-        elif choice == "10":
-            run_pip_install()
-            run_python_script('cloudflare_bulk_delete_dns.py')
-            run_python_script('cloudflare_delete_api_tokens.py')
-            run_python_script('cloudflare_delete_tunnel.py')
-            run_python_script('terraform_workspace_delete_create.py')
-            run_python_script('zerotier_delete_network.py')
-        else:
-            print("Invalid choice")
-except KeyboardInterrupt:
-    print("\nExiting...")
+if __name__ == "__main__":
+    main_menu()
