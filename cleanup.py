@@ -12,12 +12,9 @@ def run_script(script_name):
 def full_setup():
     """Run all scripts in the specified order for full reset."""
     scripts = [
-        'manage_variables.py',
-        'manage_keywords.py',
         'cloudflare_bulk_delete_dns.py',
         'cloudflare_delete_api_tokens.py',
         'cloudflare_delete_tunnel.py',
-        'zerotier_delete_network.py',
         'terraform_workspace_delete_create.py'
     ]
     for script in scripts:
@@ -31,12 +28,11 @@ def main_menu():
         '1': ('Cloudflare Bulk Record Removal', 'cloudflare_bulk_delete_dns.py'),
         '2': ('Cloudflare API Removal', 'cloudflare_delete_api_tokens.py'),
         '3': ('Cloudflare Tunnel Removal', 'cloudflare_delete_tunnel.py'),
-        '4': ('Zerotier Network Removal', 'zerotier_delete_network.py'),
-        '5': ('Terraform Workspace Rebuild', 'terraform_workspace_delete_create.py'),
-        '6': ('Manage Variables', 'manage_variables.py'),
-        '7': ('Manage Keywords', 'manage_keywords.py'),
-        '8': ('Full Reset', full_setup),
-        '9': ('Exit', sys.exit)
+        '4': ('Terraform Workspace Rebuild', 'terraform_workspace_delete_create.py'),
+        '5': ('Manage Variables', 'manage_variables.py'),
+        '6': ('Manage Keywords', 'manage_keywords.py'),
+        '7': ('Full Reset (Prerequisite: Validate Variables and Keywords)', full_setup),
+        '8': ('Exit', sys.exit)
     }
 
     while True:
@@ -49,9 +45,9 @@ def main_menu():
         if choice in menu_options:
             action = menu_options[choice]
             if callable(action[1]):
-                action[1]()  # Execute function if it's full setup or exit
+                action[1]()
             else:
-                run_script(action[1])  # Execute script file
+                run_script(action[1])
         else:
             print("Invalid choice. Please try again.")
 

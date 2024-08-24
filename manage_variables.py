@@ -21,7 +21,7 @@ variables = {
     "CLOUDFLARE_EMAIL": "Enter Cloudflare Email: ",
     "CLOUDFLARE_ACCOUNT_ID": "Enter Cloudflare Account ID: ",
     "CLOUDFLARE_ZONE_ID": "Enter Cloudflare Zone ID: ",
-    "ZEROTIER_API_TOKEN": "Enter ZeroTier API Token: ",
+    # "ZEROTIER_API_TOKEN": "Enter ZeroTier API Token: ",
     "TERRAFORM_IO_API_TOKEN": "Enter Terraform IO API Token: ",
     "TERRAFORM_OAUTH_TOKEN_ID": "Enter Terraform OAuth Token ID: ",
     "VCS_IDENTIFIER": "Enter VCS Identifier: ",
