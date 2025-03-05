@@ -51,6 +51,7 @@ def delete_tunnel(tunnel):
             print("")
         else:
             print("Error deleting tunnel: {}".format(response.status_code))
+            print("result is {}".format(response.json()))
             print("<><><><><><><><><><><><><><><><><><><><><>")
             print("")
     else:
