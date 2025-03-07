@@ -17,7 +17,7 @@ def get_tunnels():
         "X-Auth-Email": CLOUDFLARE_EMAIL,
         "X-Auth-Key": CLOUDFLARE_GLOBAL_API_KEY,
     }
-    response = requests.get(url, headers=headers)
+    response = requests.get(url, headers=headers, verify=False)
 
     if response.status_code == 200:
         data = response.json()
@@ -43,7 +43,7 @@ def delete_tunnel(tunnel):
             "X-Auth-Email": CLOUDFLARE_EMAIL,
             "X-Auth-Key": CLOUDFLARE_GLOBAL_API_KEY,
         }
-        response = requests.delete(delete_url, headers=headers)
+        response = requests.delete(delete_url, headers=headers, verify=False)
 
         if response.status_code == 200:
             print("Tunnel deleted successfully")

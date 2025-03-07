@@ -22,7 +22,7 @@ def remove_api_tokens():
     url = 'https://api.cloudflare.com/client/v4/user/tokens'
 
     # Fetch all API tokens
-    response = requests.get(url, headers=headers)
+    response = requests.get(url, headers=headers, verify=False)
 
     if response.status_code == 200:
         api_tokens = response.json()['result']
@@ -45,7 +45,7 @@ def remove_api_tokens():
             print(f'Removing {len(filtered_tokens)} API tokens...')
             for token in filtered_tokens:
                 delete_url = f'https://api.cloudflare.com/client/v4/user/tokens/{token["id"]}'
-                delete_response = requests.delete(delete_url, headers=headers)
+                delete_response = requests.delete(delete_url, headers=headers, verify=False)
                 if delete_response.status_code == 200:
                     print(f'Successfully removed API token: {token["id"]}')
                 else:

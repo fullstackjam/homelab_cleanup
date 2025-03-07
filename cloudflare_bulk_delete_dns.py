@@ -25,7 +25,7 @@ def delete_dns_entries():
     }
 
     # Fetch all DNS records
-    response = requests.get(url, headers=headers, params=params)
+    response = requests.get(url, headers=headers, params=params, verify=False)
 
     if response.status_code == 200:
         dns_records = response.json().get('result', [])
@@ -38,22 +38,26 @@ def delete_dns_entries():
 
         # Filter DNS records based on keywords
         filtered_records = []
+        excluded_records = []
         for record in dns_records:
             record_name = record.get('name', '').lower()
             record_content = record.get('content', '').lower()
+            matched = False
             for keyword in keywords:
                 if keyword.lower() in record_name or keyword.lower() in record_content:
-                    filtered_records.append(record)
+                    excluded_records.append(record)
+                    matched = True
                     break
-
-        print(f'Filtered {len(filtered_records)} DNS records.')
-
+            if not matched:
+                filtered_records.append(record)
+        print(f'Excluded {len(excluded_records)} DNS records based on keywords.')
+        print(f'Filtered {len(filtered_records)} DNS records for deletion.')
         # Delete filtered DNS records
         deleted_records = []
         for record in filtered_records:
             record_id = record['id']
             delete_url = f'https://api.cloudflare.com/client/v4/zones/{CLOUDFLARE_ZONE_ID}/dns_records/{record_id}'
-            delete_response = requests.delete(delete_url, headers=headers)
+            delete_response = requests.delete(delete_url, headers=headers, verify=False)
 
             if delete_response.status_code == 200:
                 deleted_records.append(record['name'])
