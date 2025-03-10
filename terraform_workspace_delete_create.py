@@ -1,6 +1,10 @@
 import requests
 import os
+import urllib3
 from dotenv import load_dotenv
+
+# Disable specific warning
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Load environment variables from .env file
 load_dotenv(override=True)
@@ -33,7 +37,7 @@ def check_workspace_exists():
                 print("<><><><><><><><><><><><><><><><><><><><><><>")
                 print("")
                 delete_confirmation = input("Do you want to delete it? (yes/no): ")
-                
+
                 if delete_confirmation.lower() == "yes":
                     delete_workspace(workspace_name)
                 else:

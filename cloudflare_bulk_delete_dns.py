@@ -1,6 +1,10 @@
 import os
 import requests
+import urllib3
 from dotenv import load_dotenv
+
+# Disable specific warning
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # Load environment variables from .env file
 load_dotenv(override=True)
